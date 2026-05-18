@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全方位 UI 呈現方式 Demo</title>
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #eaebf0; padding: 20px; color: #2d3436; line-height: 1.6; margin: 0;}
+        .container { max-width: 1000px; margin: 0 auto; background: transparent; }
+        
+        h1 { text-align: center; margin: 40px 0 20px 0; color: #2d3436; font-size: 2rem;}
+        .intro-text { text-align: center; color: #666; max-width: 600px; margin: 0 auto 50px auto; font-size: 1rem; }
+        
+        .demo-section { background: white; border-radius: 20px; padding: 40px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .section-title { border-bottom: 2px solid #f1f2f6; padding-bottom: 15px; margin-top: 0; margin-bottom: 15px; color: #333; display: flex; align-items: center; gap: 10px;}
+        .desc { color: #666; margin-bottom: 30px; font-size: 0.95rem; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #a29bfe;}
+        
+        /* 1. 基本懸浮卡片 (Basic Card) */
+        .card-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .basic-card {
+            background: white; border-radius: 16px; padding: 25px; flex: 1; min-width: 250px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease; cursor: pointer; border: 1px solid #f1f2f6; border-top: 5px solid #ff7675;
+        }
+        .basic-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(255, 118, 117, 0.15); }
+        
+        /* 2. 翻轉卡片 (Flip Card) */
+        .flip-card { background-color: transparent; flex: 1; min-width: 250px; height: 220px; perspective: 1000px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #eee;
+        }
+        .flip-card-front { background-color: white; border-top: 5px solid #74b9ff; }
+        .flip-card-back { background-color: #74b9ff; color: white; transform: rotateY(180deg); }
+
+        /* 3. 折疊式 (Accordion) */
+        .accordion {
+            background-color: #f8f9fa; color: #444; cursor: pointer; padding: 18px 20px; width: 100%; text-align: left; border: 1px solid #eee; outline: none; transition: 0.3s; border-radius: 8px; margin-bottom: 10px; font-weight: bold; font-size: 16px; 
+        }
+        .accordion:hover, .accordion.active { background-color: #eef2f5; border-color: #dcdde1; }
+        .accordion::after { content: '\002B'; float: right; font-weight: bold; transition: transform 0.3s; }
+        .accordion.active::after { transform: rotate(45deg); }
+        .panel { padding: 0 20px; background-color: white; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-bottom: 10px; }
+
+        /* 4. 焦點彈出視窗 (Modal) */
+        .modal-btn {
+            padding: 15px 30px; background-color: #a29bfe; color: white; border: none; border-radius: 30px; font-size: 16px; cursor: pointer; transition: 0.3s; font-weight: bold; box-shadow: 0 4px 10px rgba(162, 155, 254, 0.3); width: 100%; max-width: 300px; display: block; margin: 0 auto;
+        }
+        .modal-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(162, 155, 254, 0.5); }
+        .modal-overlay {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); backdrop-filter: blur(8px); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal-content {
+            background-color: white; padding: 40px; border-radius: 20px; max-width: 600px; width: 100%;
+            transform: translateY(30px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-overlay.show .modal-content { transform: translateY(0); opacity: 1; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #888; border:none; background:none; transition: color 0.2s; padding: 0;}
+        .close-btn:hover { color: #ff7675; }
+
+        /* 5. 社群貼文 (Social Feed) */
+        .social-post {
+            background: white; border-radius: 16px; padding: 25px; width: 100%; max-width: 500px; margin: 0 auto;
+            border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s;
+        }
+        .social-post:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .post-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); margin-right: 15px; }
+        .user-info h4 { margin: 0; font-size: 1.05rem; color: #2d3436; }
+        .user-info span { font-size: 0.85rem; color: #b2bec3; }
+        .post-image { width: 100%; height: 200px; background-color: #f1f2f6; border-radius: 12px; margin: 15px 0; display:flex; align-items:center; justify-content:center; color:#aaa; font-style:italic; border: 1px dashed #ccc;}
+        .post-actions { display: flex; gap: 25px; border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;}
+        .action-btn { background: none; border: none; color: #636e72; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: color 0.2s; padding: 0;}
+        .action-btn:hover { color: #ff7675; }
+
+        /* 6. 限時動態 (Stories UI) */
+        .stories-container { display: flex; gap: 15px; overflow-x: auto; padding: 15px 5px; -ms-overflow-style: none; scrollbar-width: none; }
+        .stories-container::-webkit-scrollbar { display: none; }
+        .story-circle { display: flex; flex-direction: column; align-items: center; cursor: pointer; flex-shrink: 0;}
+        .story-ring {
+            width: 70px; height: 70px; border-radius: 50%; padding: 3px;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            margin-bottom: 8px; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .story-ring:hover { transform: scale(1.08); }
+        .story-inner { width: 100%; height: 100%; border-radius: 50%; border: 3px solid white; background-color: #ddd; box-sizing: border-box; }
+        .story-name { font-size: 0.85rem; color: #555; font-weight: bold;}
+
+        /* 7. 水平輪播 (Carousel) */
+        .carousel-wrapper {
+            display: flex; overflow-x: auto; gap: 20px; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .carousel-wrapper::-webkit-scrollbar { display: none; }
+        .carousel-card {
+            min-width: 260px; max-width: 260px; background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee;
+            scroll-snap-align: start; flex-shrink: 0; transition: transform 0.3s; cursor: pointer;
+        }
+        .carousel-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
+        /* 8. 時間軸 (Timeline) */
+        .timeline { position: relative; margin: 20px auto; padding-left: 30px; border-left: 3px solid #a29bfe; max-width: 600px;}
+        .timeline-item { position: relative; margin-bottom: 30px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -39px; top: 0; width: 15px; height: 15px;
+            background-color: white; border: 3px solid #a29bfe; border-radius: 50%; box-shadow: 0 0 0 4px rgba(162, 155, 254, 0.2);
+        }
+        .timeline-content {
+            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; transition: transform 0.2s;
+        }
+        .timeline-content:hover { transform: translateX(5px); }
+        .timeline-date { color: #a29bfe; font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; letter-spacing: 1px;}
+
+        /* Responsive Adjustments (RWD) */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .demo-section { padding: 25px 20px; margin-bottom: 20px; border-radius: 16px; }
+            .card-container { flex-direction: column; }
+            .basic-card, .flip-card { width: 100%; min-width: 100%; }
+            .modal-content { padding: 30px 20px; }
+            h1 { font-size: 1.6rem; margin-top: 20px;}
+            .section-title { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📱 全方位 UI 呈現方式 Demo</h1>
+        <p class="intro-text">我將所有 8 種元件整合到同一個頁面中，並特別針對<b>電腦</b>與<b>手機</b>雙平台進行了響應式優化。您可以直接用手機開啟此頁面，或是隨意縮放電腦瀏覽器視窗，體驗無縫流暢的操作手感！</p>
+
+        <!-- 1. 動態懸浮卡片 -->
+        <div class="demo-section">
+            <h2 class="section-title">✨ 1. 動態懸浮卡片 (Hover Cards)</h2>
+            <p class="desc">適合：導覽選單、文章列表。透過輕微的浮起與陰影變化，營造立體感。</p>
+            <div class="card-container">
+                <div class="basic-card" style="border-top-color: #ff7675;">
+                    <h3 style="color: #ff7675; margin-top:0;">女力領導</h3>
+                    <p style="color: #636e72;">在嘉新，我們相信多元共融的力量。這裡有著無數傑出的女性領導者...</p>
+                </div>
+                <div class="basic-card" style="border-top-color: #00cec9;">
+                    <h3 style="color: #00cec9; margin-top:0;">嘉人計畫</h3>
+                    <p style="color: #636e72;">「嘉人計畫」是我們培育未來人才的搖籃，讓實習生實際參與專案實作。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 翻轉卡片 -->
+        <div class="demo-section">
+            <h2 class="section-title">🔄 2. 翻轉卡片 (Flip Cards)</h2>
+            <p class="desc">適合：具有「問題與解答」的趣味性資訊。在電腦上滑鼠移入即翻轉；在手機上用手指點擊也能順利翻面喔！</p>
+            <div class="card-container">
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <h3 style="color: #74b9ff; margin-bottom: 10px;">什麼是全方位福利？</h3>
+                            <p style="color: #a4b0be; font-size: 0.9rem;">(移入或點擊)</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <h4 style="margin-top: 0; margin-bottom: 10px;">360度照顧</h4>
+                            <p style="font-size: 0.95rem; line-height: 1.5; margin:0;">包含身心健康、財富保障到生老病死的守護，做您最安心的後盾。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front" style="border-top-color:#fdcb6e;">
+                            <h3 style="color: #fdcb6e; margin-bottom: 10px;">我們尋找什麼特質？</h3>
+                            <p style="color: #a4b0be; font-size: 0.9rem;">(移入或點擊)</p>
+                        </div>
+                        <div class="flip-card-back" style="background-color:#fdcb6e; color:#555;">
+                            <h4 style="margin-top: 0; margin-bottom: 10px;">勇於創新</h4>
+                            <p style="font-size: 0.95rem; line-height: 1.5; margin:0;">歡迎敢於打破常規、擁抱變化，並樂於溝通分享的夥伴。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 折疊式面板 -->
+        <div class="demo-section">
+            <h2 class="section-title">🔽 3. 折疊式面板 (Accordion)</h2>
+            <p class="desc">適合：FAQ 常見問題、詳細清單。讓畫面保持乾淨，點擊才展開。在手機上非常節省空間。</p>
+            <button class="accordion">🏖️ 日常彈性</button>
+            <div class="panel"><p style="padding: 15px 0; color: #555; margin:0;">包含彈性上下班時間、遠距辦公日等，讓員工更能自主安排工作與生活節奏。</p></div>
+            
+            <button class="accordion">❤️ 身心健康</button>
+            <div class="panel"><p style="padding: 15px 0; color: #555; margin:0;">每年高階健康檢查、心理諮商補助、以及辦公室人體工學設備。</p></div>
+        </div>
+
+        <!-- 4. 社群貼文 -->
+        <div class="demo-section">
+            <h2 class="section-title">💬 4. 社群貼文風格 (Social Feed)</h2>
+            <p class="desc">適合：「嘉人視角」的員工心得分享，大幅拉近企業與求職者的距離感。在手機上瀏覽就像在滑 IG 一樣自然。</p>
+            <div class="social-post">
+                <div class="post-header">
+                    <div class="avatar"></div>
+                    <div class="user-info">
+                        <h4>陳小明 (行銷部)</h4>
+                        <span>2 小時前・台北總部</span>
+                    </div>
+                </div>
+                <div style="color: #444; font-size:0.95rem;">
+                    今天公司舉辦了每月的「下午茶盲測大會」！☕️🍩 這次的甜點超級驚艷。除了工作上的挑戰，也能享受到這些充滿人情味的小確幸。<br><br>#嘉人日常 #幸福企業
+                </div>
+                <div class="post-image">[ 歡樂照片區塊 ]</div>
+                <div class="post-actions">
+                    <button class="action-btn">❤️ 讚 (32)</button>
+                    <button class="action-btn">💬 留言 (5)</button>
+                    <button class="action-btn">🔗 分享</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 限時動態 -->
+        <div class="demo-section">
+            <h2 class="section-title">⭕ 5. 限時動態導覽 (Stories UI)</h2>
+            <p class="desc">適合：橫向延伸的分類選單。隱藏了滾動條，在手機上可以用手指直覺地左右滑動探索。</p>
+            <div class="stories-container">
+                <div class="story-circle">
+                    <div class="story-ring"><div class="story-inner" style="background:#ff7675;"></div></div>
+                    <span class="story-name">女力領導</span>
+                </div>
+                <div class="story-circle">
+                    <div class="story-ring"><div class="story-inner" style="background:#74b9ff;"></div></div>
+                    <span class="story-name">實習日常</span>
+                </div>
+                <div class="story-circle">
+                    <div class="story-ring"><div class="story-inner" style="background:#00cec9;"></div></div>
+                    <span class="story-name">辦公環境</span>
+                </div>
+                <div class="story-circle">
+                    <div class="story-ring"><div class="story-inner" style="background:#fdcb6e;"></div></div>
+                    <span class="story-name">福利一覽</span>
+                </div>
+                <div class="story-circle">
+                    <div class="story-ring" style="background:#ddd;"><div class="story-inner" style="background:#a29bfe;"></div></div>
+                    <span class="story-name" style="color:#aaa;">已讀內容</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 輪播卡片 -->
+        <div class="demo-section">
+            <h2 class="section-title">↔️ 6. 水平輪播卡片 (Carousel Slider)</h2>
+            <p class="desc">適合：熱門職缺推薦。在有限的版面內提供最多資訊，手機與電腦皆支援橫向滑動。</p>
+            <div class="carousel-wrapper">
+                <div class="carousel-card" style="border-top-color: #0984e3;">
+                    <h3 style="margin-top:0; margin-bottom:10px;">💻 數位轉型工程師</h3>
+                    <p style="color:#666; font-size:0.9rem; min-height: 60px;">參與內部系統升級，導入自動化與雲端架構，為百年基業注入新科技。</p>
+                    <button style="width:100%; padding:10px; background:#f1f2f6; border:none; border-radius:8px; cursor:pointer; font-weight:bold; color:#555;">查看詳情</button>
+                </div>
+                <div class="carousel-card" style="border-top-color: #00b894;">
+                    <h3 style="margin-top:0; margin-bottom:10px;">🏨 營運儲備幹部</h3>
+                    <p style="color:#666; font-size:0.9rem; min-height: 60px;">前進第一線，學習高品質旅宿管理，為每一次的顧客相遇創造美好體驗。</p>
+                    <button style="width:100%; padding:10px; background:#f1f2f6; border:none; border-radius:8px; cursor:pointer; font-weight:bold; color:#555;">查看詳情</button>
+                </div>
+                <div class="carousel-card" style="border-top-color: #fdcb6e;">
+                    <h3 style="margin-top:0; margin-bottom:10px;">🌟 永續管理師</h3>
+                    <p style="color:#666; font-size:0.9rem; min-height: 60px;">負責推動企業 ESG 專案，撰寫永續報告書，帶領公司朝綠色未來邁進。</p>
+                    <button style="width:100%; padding:10px; background:#f1f2f6; border:none; border-radius:8px; cursor:pointer; font-weight:bold; color:#555;">查看詳情</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 時間軸 -->
+        <div class="demo-section">
+            <h2 class="section-title">⏳ 7. 時間軸 (Timeline)</h2>
+            <p class="desc">適合：招募流程、企業發展史。結構清晰，手機上閱讀也不會覺得擁擠。</p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-date">STEP 1 - 線上投遞</div>
+                        <h4 style="margin:5px 0;">履歷審查</h4>
+                        <p style="margin:0; color:#666; font-size:0.95rem;">請透過官網投遞您的履歷，一週內完成初步審核。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-date">STEP 2 - 第一次見面</div>
+                        <h4 style="margin:5px 0;">部門主管面試</h4>
+                        <p style="margin:0; color:#666; font-size:0.95rem;">深入了解專業能力與認識未來工作夥伴。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. 彈出視窗 -->
+        <div class="demo-section">
+            <h2 class="section-title">🔍 8. 焦點彈出視窗 (Modal)</h2>
+            <p class="desc">適合：專注閱讀長篇文章。視窗會自動適應手機螢幕大小，過長時可以在視窗內部滾動。</p>
+            <button class="modal-btn" onclick="document.getElementById('myModal').classList.add('show')">
+                開啟閱讀模式 📖
+            </button>
+        </div>
+        
+    </div>
+
+    <!-- Modal 結構放在最外層 -->
+    <div id="myModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="document.getElementById('myModal').classList.remove('show')">✖</button>
+            <h2 style="color: #a29bfe; margin-top: 0; margin-bottom: 20px;">總經理的一封信</h2>
+            <div style="color: #555; line-height: 1.8;">
+                <p>親愛的嘉人：</p>
+                <p>自 1954 年築起第一道堅韌牆面起，嘉新不斷跨越產業邊界。我們將水泥的嚴謹轉化為旅宿的精緻，將建築的安定延伸至健康照護的專業。</p>
+                <p>在多元事業的拼圖中，我們持續定義 Quality of Life 的真實模樣。這不僅是對客戶的承諾，更是我們為每一位員工打造的工作環境標準。</p>
+                <p style="font-weight: bold; color: #a29bfe; text-align: right; margin-top: 30px;">—— 歡迎來到嘉新</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 折疊面板 (Accordion) 邏輯
+        var acc = document.getElementsByClassName("accordion");
+        for (var i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+                } 
+            });
+        }
+    </script>
+</body>
+</html>
